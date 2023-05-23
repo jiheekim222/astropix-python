@@ -123,13 +123,13 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Post-run decoding')
-    parser.add_argument('-f', '--fileInput', default=None, required=False,
+    parser.add_argument('-f', '--fileInput', default=None, required=True,
                     help='Input data file to decode')
 
     parser.add_argument('-d', '--dirInput', default=None, required=False,
                     help='Input directory of data files to decode')
 
-    parser.add_argument('-o', '--outDir', default=None, required=False,
+    parser.add_argument('-o', '--outDir', default='/home/labadmin/AstropPix/BeamTest0523/BeamData/chip_v2_230101/', required=False,
                     help='Output Directory for all decoded datafiles. Defaults to directory raw data is saved in')
 
     parser.add_argument('-L', '--loglevel', type=str, choices = ['D', 'I', 'E', 'W', 'C'], action="store", default='I',
