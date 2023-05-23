@@ -165,7 +165,7 @@ def main(args,row,col,injectPix):
         # Write noise scan summary per pixel
         noisefile.write(f"{col},{row},{n_noise}\n")
         noisefile.flush()
-    print(f"{col},{row},{n_noise}\n")
+        print(f"{col},{row},{n_noise}\n")
     # Ends program cleanly when a keyboard interupt is sent.
     except KeyboardInterrupt:
         logger.info("Keyboard interupt. Program halt!")
