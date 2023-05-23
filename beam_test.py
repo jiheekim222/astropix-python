@@ -91,11 +91,11 @@ def main(args):
         col_val = int(line.split(',')[0])
         row_val = int(line.split(',')[1])
         masking_threshold_in_pixels = args.noisethreshold
-        if noise_val > masking_threshold_in_pixels:        
+        if noise_val > masking_threshold_in_pixels:
             astro.disable_pixel(col_val,row_val)
         else:
             astro.enable_pixel(col_val,row_val)
-        
+ 
     max_errors = args.errormax
     i = 0
     errors = 0 # Sets the threshold 
@@ -162,42 +162,43 @@ def main(args):
                 print(binascii.hexlify(readout))
 
                 # Added fault tolerance for decoding, the limits of which are set through arguments
-                try:
-                    hits = astro.decode_readout(readout, i, printer = True)
+                if args.ludicrousspeed is False:
+                    try:
+                        hits = astro.decode_readout(readout, i, printer = True)
 
-                except IndexError:
-                    errors += 1
-                    logger.warning(f"Decoding failed. Failure {errors} of {max_errors} on readout {i}")
-                    # We write out the failed decode dataframe
-                    hits = decode_fail_frame
-                    hits.readout = i
-                    hits.hittime = time.time()
+                    except IndexError:
+                        errors += 1
+                        logger.warning(f"Decoding failed. Failure {errors} of {max_errors} on readout {i}")
+                        # We write out the failed decode dataframe
+                        hits = decode_fail_frame
+                        hits.readout = i
+                        hits.hittime = time.time()
 
-                    # This loggs the end of it all 
-                    if errors > max_errors:
-                        logger.warning(f"Decoding failed {errors} times on an index error. Terminating Progam...")
-                finally:
-                    i += 1
+                        # This loggs the end of it all 
+                        if errors > max_errors:
+                            logger.warning(f"Decoding failed {errors} times on an index error. Terminating Progam...")
+                    finally:
+                        i += 1
 
-                    # If we are saving a csv this will write it out. 
-                    if args.saveascsv:
-                        csvframe = pd.concat([csvframe, hits])
-                        print(hits)
-                    # This handels the hitplotting. Code by Henrike and Amanda
-                    if args.showhits:
-                        # This ensures we aren't plotting NaN values. I don't know if this would break or not but better 
-                        # safe than sorry
-                        if pd.isnull(hits.tot_msb.loc(0)):
-                            pass
-                        elif len(hits)>0:#safeguard against bad readouts without recorded decodable hits
-                            #Isolate row and column information from array returned from decoder
-                            rows = hits.location[hits.isCol]
-                            columns = hits.location[hits.isCol]
-                            plotter.plot_event( rows, columns, i)
+                        # If we are saving a csv this will write it out. 
+                        if args.saveascsv:
+                            csvframe = pd.concat([csvframe, hits])
+                            print(hits)
+                        # This handels the hitplotting. Code by Henrike and Amanda
+                        if args.showhits:
+                            # This ensures we aren't plotting NaN values. I don't know if this would break or not but better 
+                            # safe than sorry
+                            if pd.isnull(hits.tot_msb.loc(0)):
+                                pass
+                            elif len(hits)>0:#safeguard against bad readouts without recorded decodable hits
+                                #Isolate row and column information from array returned from decoder
+                                rows = hits.location[hits.isCol]
+                                columns = hits.location[hits.isCol]
+                                plotter.plot_event( rows, columns, i)
 
-                    # If we are logging runtime, this does it!
-                    if args.timeit:
-                        print(f"Read and decode took {(time.time_ns()-start)*10**-9}s")
+                        # If we are logging runtime, this does it!
+                        if args.timeit:
+                            print(f"Read and decode took {(time.time_ns()-start)*10**-9}s")
 
             # If no hits are present this waits for some to accumulate
             else: time.sleep(.001)
@@ -223,16 +224,16 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Astropix Driver Code')
-    parser.add_argument('-n', '--name', default='', required=False,
+    parser.add_argument('-n', '--name', default='run1_proton120GeV', required=False,
                     help='Option to give additional name to output files upon running')
 
-    parser.add_argument('-o', '--outdir', default='.', required=False,
+    parser.add_argument('-o', '--outdir', default='/home/labadmin/AstropPix/BeamTest0523/BeamData/chip_v2_230101', required=False,
                     help='Output Directory for all datafiles')
 
     parser.add_argument('-y', '--yaml', action='store', required=False, type=str, default = 'testconfig',
                     help = 'filepath (in config/ directory) .yml file containing chip configuration. Default: config/testconfig.yml (All pixels off)')
 
-    parser.add_argument('-ns', '--noisescaninfo', action='store', required=False, type=str, default = 'example_noise_scan_summary.csv',
+    parser.add_argument('-ns', '--noisescaninfo', action='store', required=False, type=str, default = '/home/labadmin/AstropPix/BeamTest0512/NoiseScan/nomasking.csv',
                     help = 'filepath noise scan summary file containing chip noise infomation.')
 
     parser.add_argument('-s', '--showhits', action='store_true',
@@ -273,15 +274,14 @@ if __name__ == "__main__":
     parser.add_argument('-L', '--loglevel', type=str, choices = ['D', 'I', 'E', 'W', 'C'], action="store", default='I',
                     help='Set loglevel used. Options: D - debug, I - info, E - error, W - warning, C - critical. DEFAULT: D')
 
-    parser.add_argument('-nt', '--noisethreshold', type=int, action="store", default=0,
+    parser.add_argument('-nt', '--noisethreshold', type=int, action="store", default=0, required=False,
                     help='Set threshold on noisy pixel to mask it. DEFAULT: 0')
 
-    """
-    parser.add_argument('--ludicrous-speed', type=bool, action='store_true', default=False,
+    parser.add_argument('--ludicrousspeed', action='store_true', default=False,
                     help="Fastest possible data collection. No decode, no output, no file.\
                          Saves bitstreams in memory until keyboard interupt or other error and then writes them to file.\
                              Use is not generally recommended")
-    """
+    
     parser.add_argument
     args = parser.parse_args()
 
